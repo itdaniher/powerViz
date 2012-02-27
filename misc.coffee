@@ -7,15 +7,16 @@ touches = []
 w = h = px = py = dx = dy = 0
 v = i = target = 0
 
+serverIP = "192.168.0.247"
+
 updateCEE = ->
 	target = Math.round ( target*100 )
 	target = target/100
 	_data =
 		mode: SMUModes[SMUMode]
 		value: target
-	console.log _data
-	$.post "http://192.168.0.247:9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify _data
-	$.get "http://192.168.0.247:9003/json/v0/devices/com.nonolithlabs.cee*/a/input", {count:1}, (data) ->
+	$.post "http://" + serverIP + ":9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify _data
+	$.get "http://" + serverIP + ":9003/json/v0/devices/com.nonolithlabs.cee*/a/input", {count:1}, (data) ->
 		data = data.split('\n')[1]
 		data = (parseFloat item for item in data.split(','))
 		v = data[0]
