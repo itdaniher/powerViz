@@ -10,6 +10,13 @@ var touches = [];
 var px;
 var py;
 
+var targetOld = 0;
+var target = 0;
+var SMUMode = "DISABLED";
+var targetMax;
+
+var SMUModes = {"SIMV":2, "SVMI":1, "DISABLED":0};
+
 function update() {
 	if (updateStarted) return;
 	updateStarted = true;
@@ -28,15 +35,29 @@ function update() {
 
 
 	if ( touches.length == 1) {
+		targetOld = target;
 		ctx.clearRect(0, 0, w, h);
 		touch = touches[0];
+
 		if (dx < dy){
-    		px = touch.pageX;}
+			SMUMode = "SIMV";
+			targetMax = 200;  
+ 			px = touch.pageX;
+			target = targetMax*(w-px)/w;}
 		else if (dy < dx){
-   			py = touch.pageY;}
+			SMUMode = "SVMI";
+			targetMax = 5;
+   			py = touch.pageY;
+			target = targetMax*(h-py)/h;}
 		else {
 			px = touch.pageX;
 			py = touch.pageY;}
+
+
+		target = Math.round(target*100)/100;
+		console.log(SMUMode, target);
+		_data = {mode:SMUModes[SMUMode], value:target}
+		$.post("http://192.168.0.247:9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify(_data))
 
 		ctx.fillRect(px, py, w, h);
 		ctx.fillStyle = "rgba(0, 0, 200, 1.0)";
@@ -47,16 +68,20 @@ function update() {
 	updateStarted = false;
 }
 
+function populateFromJSON(data){
+	cee = data
+	channel = cee.channels['a']
+}
+
 function ol() {
 
 	canvas = document.getElementById('canvas');
 	ctx = canvas.getContext('2d');
 	timer = setInterval(update, 50);
 
-//	$.getJSON("http://localhost:9003/json/v0/devices/com.nonolithlabs.cee*/", function(data){cee = data;});
+	$.getJSON("http://localhost:9003/json/v0/devices/com.nonolithlabs.cee*/", populateFromJSON);
 
 	canvas.addEventListener('touchend', function(event) {
-//		ctx.clearRect(0, 0, w, h);
 	});
 
 	canvas.addEventListener('touchmove', function(event) {
@@ -68,9 +93,5 @@ function ol() {
 		_touch = event.touches[0];
 		dx = Math.abs(px - _touch.pageX);
 		dy = Math.abs(py - _touch.pageY);
-		if (dx < dy){
-			console.log('select x');}
-		if (dy < dx){
-			console.log('select y');}
 	});
 };
