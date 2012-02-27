@@ -7,8 +7,9 @@ updateCEE = ->
 		DISABLED: 0
 		SVMI: 1
 		SIMV: 2
-	target = Math.round target*100/100
-	console.log @SMUMode, target
+	target = Math.round ( @target*100 )
+	target = target/100
+	console.log SMUModes[@SMUMode], target
 	_data =
 		mode: SMUModes[@SMUMode]
 		value: target
@@ -31,16 +32,19 @@ updateGUI = ->
 			@SMUMode = "SIMV"
 			targetMax = 200
 			@px = touch.pageX
-			target = targetMax*(w-px)/w
+			@target = targetMax*(w-px)/w
 		else if @dy < @dx
-			@SMUMode = "SMVI"
+			@SMUMode = "SVMI"
 			targetMax = 5
 			@py = touch.pageY
-			target = targetMax*(h-py)/h
+			@target = targetMax*(h-py)/h
 		else
 			@SMUMode = "disabled"
-			target = 0
-	
+			@target = 0
+	@ctx.fillRect px, py, w, h
+	@ctx.fillStyle = "rgba(0, 0, 200, 1.0)"
+	@ctx.fill()
+
 populateFromJSON = (data) -> cee = data
 
 ol = ->
@@ -51,7 +55,7 @@ ol = ->
 #	$.getJSON("http://localhost:9003/json/v0/devices/com.nonolithlabs.cee*/", populateFromJSON)
 #	canvas.addEventListener 'touchend', (event) => pass
 	@canvas.addEventListener 'touchmove', (event) =>
-		event.preventDefault
+		event.preventDefault()
 		@touches = event.touches
 	@canvas.addEventListener 'touchstart', (event) =>
 		_touch = event.touches[0]
