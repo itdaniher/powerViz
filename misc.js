@@ -3,7 +3,8 @@ var ctx;
 var w = 0;
 var h = 0;
 
-var timer;
+var timerCEE;
+var timerGUI;
 var updateStarted = false;
 var cee;
 var touches = [];
@@ -16,7 +17,14 @@ var targetMax;
 
 var SMUModes = {"SIMV":2, "SVMI":1, "DISABLED":0};
 
-function update() {
+function updateCEE() {
+		target = Math.round(target*100)/100;
+		console.log(SMUMode, target);
+		_data = {mode:SMUModes[SMUMode], value:target}
+		$.post("http://192.168.0.247:9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify(_data))
+}
+
+function updateGUI() {
 	if (updateStarted) return;
 	updateStarted = true;
 
@@ -31,7 +39,6 @@ function update() {
 		canvas.width = w;
 		canvas.height = h;
 	}
-
 
 	if ( touches.length == 1) {
 		ctx.clearRect(0, 0, w, h);
@@ -54,12 +61,6 @@ function update() {
 			py = touch.pageY;
 			}
 
-
-		target = Math.round(target*100)/100;
-//		console.log(SMUMode, target);
-		_data = {mode:SMUModes[SMUMode], value:target}
-		$.post("http://192.168.0.247:9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify(_data))
-
 		ctx.fillRect(px, py, w, h);
 		ctx.fillStyle = "rgba(0, 0, 200, 1.0)";
 		ctx.fill();
@@ -78,7 +79,8 @@ function ol() {
 
 	canvas = document.getElementById('canvas');
 	ctx = canvas.getContext('2d');
-	timer = setInterval(update, 100);
+	timerGUI = setInterval(updateGUI, 20);
+	timerCEE = setInterval(updateCEE, 100);
 
 //	$.getJSON("http://localhost:9003/json/v0/devices/com.nonolithlabs.cee*/", populateFromJSON);
 
