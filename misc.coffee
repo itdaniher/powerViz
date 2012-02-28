@@ -12,50 +12,51 @@ serverIP = "192.168.0.247"
 drawing = false
 
 registerListeners = ->
+	server.host = serverIP + ":9003"
 	server.connect()
 	server.connected.listen ->
 		server.devicesChanged.listen ->
 			window.device = server.selectDevice server.devices[0]
 			window.device.changed.listen ->
-				window.listenA = new server.Listener server.device, [server.device.channels.a.streams.i, server.device.channels.a.streams.v]
-				window.listenA.configure()
+				window.listenA = new server.Listener server.device, [server.device.channels.a.streams.v, server.device.channels.a.streams.i]
+				window.listenA.configure(-1, .05, -1)
 				window.listenA.updated.listen (m) =>
-					console.log(m)
+					v = m['data'][0][0]
+					i = m['data'][1][0]
+					server.device.channels.a.setConstant SMUModes[SMUMode], Math.round(target*100)/100
 				window.listenA.submit()
 				server.ws.send JSON.stringify {_cmd:"startCapture"}
-	
 
-updateCEE = ->
-	target = Math.round ( target*100 )
-	target = target/100
-	_data =
-		mode: SMUModes[SMUMode]
-		value: target
-	$.post "http://" + serverIP + ":9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify _data
-	$.get "http://" + serverIP + ":9003/json/v0/devices/com.nonolithlabs.cee*/a/input", {count:1}, (data) ->
-		data = data.split('\n')[1]
-		data = (parseFloat item for item in data.split(','))
-		v = data[0]
-		i = data[1]
+
+#updateCEE = ->
+#	target = Math.round ( target*100 )
+#	target = target/100
+#	_data =
+#		mode: SMUModes[SMUMode]
+#		value: target
+#	$.post "http://" + serverIP + ":9003/json/v0/devices/com.nonolithlabs.cee*/a/output", JSON.stringify _data
+#	$.get "http://" + serverIP + ":9003/json/v0/devices/com.nonolithlabs.cee*/a/input", {count:1}, (data) ->
+#		data = data.split('\n')[1]
+#		data = (parseFloat item for item in data.split(','))
+#		v = data[0]
+#		i = data[1]
 
 updateGUI = ->
 	if not drawing
 		drawing = true
-		nw = innerWidth
-		nh = innerHeight
+		nw = window.innerWidth
+		nh = window.innerHeight
 		if w isnt nw or h isnt nh
 			w = nw
 			h = nh
-			window.canvas.style.width = w+'px'
-			window.canvas.style.height = h+'px'
 			window.canvas.width = w
 			window.canvas.height = h
 		if touches.length is 1
 			window.ctx.clearRect 0, 0, w, h
 			touch = touches[0]
+			console.log touch
 			if dx < dy
 				SMUMode = "SIMV"
-				px = touch.pageX
 				target = 200*(w-px)/w
 				py = h - v/5*h
 			else if dy < dx
@@ -77,6 +78,7 @@ updateGUI = ->
 
 
 ol = ->
+	registerListeners()
 	window.canvas = $("#canvas")[0]
 	window.ctx = window.canvas.getContext '2d'
 	updateGUI()
