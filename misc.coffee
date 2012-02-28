@@ -11,6 +11,20 @@ serverIP = "192.168.0.247"
 
 drawing = false
 
+registerListeners = ->
+	server.connect()
+	server.connected.listen ->
+		server.devicesChanged.listen ->
+			window.device = server.selectDevice server.devices[0]
+			window.device.changed.listen ->
+				window.listenA = new server.Listener server.device, [server.device.channels.a.streams.i, server.device.channels.a.streams.v]
+				window.listenA.configure()
+				window.listenA.updated.listen (m) =>
+					console.log(m)
+				window.listenA.submit()
+				server.ws.send JSON.stringify {_cmd:"startCapture"}
+	
+
 updateCEE = ->
 	target = Math.round ( target*100 )
 	target = target/100
@@ -66,7 +80,7 @@ ol = ->
 	window.canvas = $("#canvas")[0]
 	window.ctx = window.canvas.getContext '2d'
 	updateGUI()
-	timerCEE = setInterval updateCEE, 15
+#	timerCEE = setInterval updateCEE, 15
 #	$.getJSON "http://localhost:9003/json/v0/devices/com.nonolithlabs.cee*/", (data) ->
 #		cee = data
 #	window.canvas.addEventListener 'touchend', (event) =>
